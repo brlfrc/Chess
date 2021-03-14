@@ -2,160 +2,66 @@
 #define my_piece_h
 
 
-enum type_piece {Nullpiece, Rook, Knight, Bishop, Queen, Pawn, King};
+enum type_piece {Null, R, N, B, Q, p, K};
 enum color_piece {white, black};
 
-class piece{
+class AbstractPiece{
 	protected:
 		int raw;										//raw of piece
 		int col;										//col of piece
 		color_piece color;										//color of piece
-															// white    -> 0
-															// black  	-> 1
-		type_piece type;										//type of piece 
-															//rook 		-> 1
-															//kinght	-> 2
-															//bishop 	-> 3
-															//queen 	-> 4
-															//pawn		-> 5
-															//king 		-> 6
+		type_piece type;										//type of piece
 		bool alive;										//is this piece alive?
 
 	public:
-		piece(){};										//default constructor (not used)
+		AbstractPiece(){};										//default constructor (not used)
 
 
-		int GetRaw();									//retun raw
-		int GetCol();									//retun col
-		bool GetAlive();								//retun alive status							
-		color_piece GetColor();								//retun color
-		type_piece GetType();									//retun # for type
+		int GetRaw(){return raw;};									//retun raw
+		int GetCol(){return col;};									//retun col
+		bool GetAlive(){return alive;};								//retun alive status							
+		color_piece GetColor(){return color;};								//retun color
+		type_piece GetType(){return type;};									//retun # for type
 
-		bool SetAlive(bool a);							//set alive status
-		void ChangePos(int n_raw, int n_col);			//change both raw and col
+		bool SetAlive(bool a){alive = a;};							//set alive status
+		void ChangePos(int n_raw, int n_col){raw = n_raw;col = n_col;};			//change both raw and col
 
 		
 };
 
-class nullpiece : public piece{
+class Nullpiece : public AbstractPiece{
 	public:
-		nullpiece(int riga, int colonna);
+		Nullpiece(int riga, int colonna){raw = riga; col = colonna;	type = Null; alive = false;};
 };
 
-nullpiece::nullpiece(int riga, int colonna){
-	raw = riga;
-	col = colonna;
-	type = Nullpiece;
-	alive = false;
-}
-
-class rook : public piece{
+class Rook : public AbstractPiece{
 	public:
-		rook(color_piece colore, int riga, int colonna);
+		Rook(color_piece colore, int riga, int colonna){raw = riga;	col = colonna;	color = colore;	type = R; alive = true;};
 };
 
-rook::rook(color_piece colore, int riga, int colonna){
-	raw = riga;
-	col = colonna;
-	color = colore;
-	type = Rook;
-	alive = true;
-}
-
-class knight : public piece{
+class Knight : public AbstractPiece{
 	public:
-		knight(color_piece colore, int riga, int colonna);
+		Knight(color_piece colore, int riga, int colonna) {raw = riga; col = colonna; color = colore; type = N; alive = true;};
 };
 
-knight::knight(color_piece colore, int riga, int colonna){
-	raw = riga;
-	col = colonna;
-	color = colore;
-	type = Knight;
-	alive = true;
-}
-
-class bishop : public piece{
+class Bishop : public AbstractPiece{
 	public:
-		bishop(color_piece colore, int riga, int colonna);
+		Bishop(color_piece colore, int riga, int colonna){raw = riga; col = colonna; color = colore; type = B; alive = true;};
 };
 
-bishop::bishop(color_piece colore, int riga, int colonna){
-	raw = riga;
-	col = colonna;
-	color = colore;
-	type = Bishop;
-	alive = true;
-}
-
-class queen : public piece{
+class Queen : public AbstractPiece{
 	public:
-		queen(color_piece colore, int riga, int colonna);
+		Queen(color_piece colore, int riga, int colonna){raw = riga; col = colonna; color = colore; type = Q; alive = true;};
 };
 
-queen::queen(color_piece colore, int riga, int colonna){
-	raw = riga;
-	col = colonna;
-	color = colore;
-	type = Queen;
-	alive = true;
-}
-
-class pawn : public piece{
+class Pawn : public AbstractPiece{
 	public:
-		pawn(color_piece colore, int riga, int colonna);
+		Pawn(color_piece colore, int riga, int colonna){raw = riga; col = colonna; color = colore; type = p; alive = true;};
 };
 
-pawn::pawn(color_piece colore, int riga, int colonna){
-	raw = riga;
-	col = colonna;
-	color = colore;
-	type = Pawn;
-	alive = true;
-}
-
-class king : public piece{
+class King : public AbstractPiece{
 	public:
-		king(color_piece colore, int riga, int colonna);
+		King(color_piece colore, int riga, int colonna){raw = riga; col = colonna; color = colore; type = K; alive = true;};
 };
-
-king::king(color_piece colore, int riga, int colonna){
-	raw = riga;
-	col = colonna;
-	color = colore;
-	type = King;
-	alive = true;
-}
-
-//---------------------------------------------------------
-
-int piece::GetRaw(){
-	return raw;
-}
-
-int piece::GetCol(){
-	return col;
-}
-
-bool piece::GetAlive(){
-	return alive;
-}
-
-color_piece piece::GetColor(){
-	return color;
-}
-
-type_piece piece::GetType(){
-	return type;
-}
-
-bool piece::SetAlive(bool a){
-	alive = a;
-}
-
-void piece::ChangePos(int n_raw, int n_col){
-	raw = n_raw;
-	col = n_col;
-}
 
 #endif
