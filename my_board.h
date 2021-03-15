@@ -4,7 +4,7 @@
 class board{
 	private:
 		board * last;												//stores the board before a move 
-		AbstractPiece * thisboard [8][8];									//the board, with all the pieces
+		AbstractPiece * thisboard [8][8];							//the board, with all the pieces
 
 		int currentmove;											//can be 0 -> white or 1 -> black
 
@@ -13,19 +13,20 @@ class board{
 		board(board * oldBoard);									//copy constructor
 		~board();													//destructor (delete all pieces etc.)
 
-		AbstractPiece * GetPiece(int raw, int col){return thisboard[raw][col];};	//returns piece from raw and column
-		bool Occupied(int n_raw, int n_col){return (thisboard[n_raw][n_col] -> GetType() != 0);};//is a position occupied?
+		AbstractPiece * GetPiece(int raw, int col){return thisboard[raw][col];};
+		bool Occupied(int n_raw, int n_col){return (thisboard[n_raw][n_col] != NULL);};
 
-		void Print();												//prints the board
+		void Print();												
 		string Unicode(type_piece type, color_piece color); 		//converts type+color in unicode char
 
 		int GetCurrentMoveInt(){return currentmove;};				//returns 0 || 1 for white & black
-		void SetCurrentMoveInt(int a){currentmove = a;}	;		//set currentmove
-		void InvertCurrentMoveInt(){if (currentmove==0)	currentmove=1; else	currentmove=0;}; //Invert 0.1 currentmove
+		void SetCurrentMoveInt(int a){currentmove = a;};
+		void InvertCurrentMoveInt(){if (currentmove==0)	currentmove=1; else	currentmove=0;};
 
 		bool Castling(bool scan [8][8]);
-		bool Move(bool scan [8][8], bool scan2 [8][8]);				//Double can the board and compare two boards and find the move
-																	//if box occupied scan =true, else false
+
+		//Double can the board and compare two boards and find the move, if box occupied scan =true, else false
+		bool Move(bool scan [8][8], bool scan2 [8][8]);				
 };
 
 
@@ -57,7 +58,7 @@ board::board(){
 
 	for(int i = 0; i < 8; i++){
 		for(int j = 2; j < 6; j++){
-			thisboard[j][i] = new Nullpiece(j,i);
+			thisboard[j][i] = NULL;
 		}
 	}
 
@@ -76,10 +77,13 @@ board::~board(){
 void board::Print(){
 	for(int i = 7; i >= 0; i--){
 		for(int j = 0; j < 8; j++){
-			type_piece type = thisboard[i][j] -> GetType();
-			color_piece color = thisboard[i][j] -> GetColor();
 			if(j == 0) cout << "|__";
-			cout << this -> Unicode(type,color);
+			if (thisboard[i][j] != NULL){
+				type_piece type = thisboard[i][j] -> GetType();
+				color_piece color = thisboard[i][j] -> GetColor();
+				cout << this -> Unicode(type,color);
+			}
+			else cout << "  ";
 			if(j != 7) cout << "__|__";
 			else cout << "__|\t" << i+1;
 		}
@@ -90,31 +94,31 @@ void board::Print(){
 
 string board::Unicode(type_piece type, color_piece color){
 
-	if(type == Null) return "  ";
-	if(type == R){	
+	if(type == rook){	
 		if(color == black) return "Tb";
 		if(color == white) return "Tw";
 	}
-	if(type == N){	
+	if(type == knight){	
 		if(color == black) return "Nb";
 		if(color == white) return "Nw";
 	}
-	if(type == B){	
+	if(type == bishop){	
 		if(color == black) return "Bb";
 		if(color == white) return "Bw";
 	}
-	if(type == Q){	
+	if(type == queen){	
 		if(color == black) return "Qb";
 		if(color == white) return "Qw";
 	}
-	if(type == p){	
+	if(type == pawn){	
 		if(color == black) return "pb";
 		if(color == white) return "pw";
 	}
-	if(type == K){	
+	if(type == king){	
 		if(color == black) return "Kb";
 		if(color == white) return "Kw";
 	}
+	return "  ";
 }
 
 //------------------------------------------------
@@ -123,11 +127,11 @@ bool board::Castling(bool scan [8][8]){
 	if (scan[0][5]==true && scan[0][6]==true && this->GetCurrentMoveInt()==0){					//WHITE
 		thisboard[0][6] = this->GetPiece(0,4);									//king
 	    thisboard[0][6]->ChangePos(0,6);
-	  	thisboard[0][4] = new Nullpiece(0,4);
+	  	thisboard[0][4] =NULL;
 
 	  	thisboard[0][5] = this->GetPiece(0,7);									//rook
 	    thisboard[0][5]->ChangePos(0,5);
-	  	thisboard[0][7] = new Nullpiece(0,7);
+	  	thisboard[0][7] = NULL;
 
 	  	return true;
 	}
@@ -135,11 +139,11 @@ bool board::Castling(bool scan [8][8]){
 	if (scan[0][2]==true && scan[0][3]==true && this->GetCurrentMoveInt()==0){
 		thisboard[0][2] = this->GetPiece(0,4);									//king
 	    thisboard[0][2]->ChangePos(0,2);
-	  	thisboard[0][4] = new Nullpiece(0,4);
+	  	thisboard[0][4] = NULL;
 
 	  	thisboard[0][3] = this->GetPiece(0,4);									//rook
 	    thisboard[0][3]->ChangePos(0,3);
-	  	thisboard[0][4] = new Nullpiece(0,4);
+	  	thisboard[0][4] = NULL;
 
 	  	return true;
 	}
@@ -147,11 +151,11 @@ bool board::Castling(bool scan [8][8]){
 	if (scan[7][5]==true && scan[7][6]==true && this->GetCurrentMoveInt()==1){					//BLACK
 		thisboard[7][6] = this->GetPiece(7,4);									//king
 	    thisboard[7][6]->ChangePos(7,6);
-	  	thisboard[7][4] = new Nullpiece(7,4);
+	  	thisboard[7][4] = NULL;
 
 	  	thisboard[7][5] = this->GetPiece(7,7);									//rook
 	    thisboard[7][5]->ChangePos(7,5);
-	  	thisboard[7][7] = new Nullpiece(7,7);
+	  	thisboard[7][7] = NULL;
 
 	  	return true;
 	}
@@ -159,11 +163,11 @@ bool board::Castling(bool scan [8][8]){
 	if (scan[7][2]==true && scan[7][3]==true && this->GetCurrentMoveInt()==1){
 		thisboard[7][2] = this->GetPiece(7,4);									//king
 	    thisboard[7][2]->ChangePos(7,2);
-	  	thisboard[7][4] = new Nullpiece(7,4);
+	  	thisboard[7][4] = NULL;
 
 	  	thisboard[7][3] = this->GetPiece(7,4);									//rook
 	    thisboard[7][3]->ChangePos(7,3);
-	  	thisboard[7][4] = new Nullpiece(7,4);
+	  	thisboard[7][4] = NULL;
 
 	  	return true;
 	}
@@ -179,12 +183,14 @@ bool areSame(bool scan [8][8], bool scan2 [8][8]){
     return true;
 }
 //-------------------------------------------------------
-bool board::Move(bool scan [8][8], bool scan2 [8][8]){ 					//two type of move: shift a piece (1), take a piece
+//two type of move: shift a piece (1), take a piece
+bool board::Move(bool scan [8][8], bool scan2 [8][8]){ 					
 	
-	bool notaken = areSame (scan, scan2);	 	//I nedd two scan when a piece is taking, else one is enough. In this case I put scan=scan2
+	//I nedd two scan when a piece is taking, else one is enough. In this case I put scan=scan2
+	bool notaken = areSame (scan, scan2);
 
 	int i_old, j_old, i_new, j_new;
-	int count=0; 								//need for the debug (if something get wrong during the scan of the board)
+	int count=0; 								
 
 	for(int i =0; i<8; i++){
 		for(int j=0; j<8; j++){
@@ -198,7 +204,7 @@ bool board::Move(bool scan [8][8], bool scan2 [8][8]){ 					//two type of move: 
 				j_new= j;
 				count++;
 			}
-			if (this->Occupied(i,j)!=scan[i][j] && this->Occupied(i,j)== true && notaken==false){  //for taken move
+			if (this->Occupied(i,j)!=scan[i][j] && this->Occupied(i,j)== true && notaken==false){ 
 				i_new= i;
 				j_new= j;
 				count++;
@@ -212,14 +218,16 @@ bool board::Move(bool scan [8][8], bool scan2 [8][8]){ 					//two type of move: 
 	if(count ==2){                           			// shift a piece
 	    thisboard[i_new][j_new] = this->GetPiece(i_old,j_old);
 	    thisboard[i_new][j_new]->ChangePos(i_new,j_new);
-	  	thisboard[i_old][j_old] = new Nullpiece(i_old,j_old);
+	  	thisboard[i_old][j_old] = NULL;
 
 	  	this->InvertCurrentMoveInt();
 	  	return true;
 	}
 
-	if (count ==1 && this->GetPiece(i_new,j_new)->GetColor()!=this->GetCurrentMoveInt()){				// take an other piece: that's critic. I can't find an easy way to understand which piece is taken
-		thisboard[i_new][j_new]->SetAlive(false);										// So i suppose two scan, in the first the enemy's piece dissapears and in the second one i'll put the piece
+	// Take an other piece: that's critic. I can't find an easy way to understand which piece is taken
+	// So i suppose two scan, in the first the enemy's piece dissapears and in the second one i'll put the piece
+	if (count ==1 && this->GetPiece(i_new,j_new)->GetColor()!=this->GetCurrentMoveInt()){				
+		thisboard[i_new][j_new]->SetAlive(false);										
 		
 		for(int i =0; i<8; i++){
 			for(int j=0; j<8; j++)
@@ -231,7 +239,7 @@ bool board::Move(bool scan [8][8], bool scan2 [8][8]){ 					//two type of move: 
 		}
 		thisboard[i_new][j_new] = this->GetPiece(i_old,j_old);
 	    thisboard[i_new][j_new]->ChangePos(i_new,j_new);
-	  	thisboard[i_old][j_old] = new Nullpiece(i_old,j_old);
+	  	thisboard[i_old][j_old] = NULL;
 
 	  	this->InvertCurrentMoveInt();
 	  	return true;

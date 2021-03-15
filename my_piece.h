@@ -2,66 +2,66 @@
 #define my_piece_h
 
 
-enum type_piece {Null, R, N, B, Q, p, K};
-enum color_piece {white, black};
+enum type_piece {rook=0, knight, bishop, queen, pawn, king};
+const char name_piece[]= {'R', 'N', 'B', 'Q', 'p', 'K'};
+
+enum color_piece {white=0, black};
+const char name_color[]= {'W', 'B'};
 
 class AbstractPiece{
 	protected:
-		int raw;										//raw of piece
-		int col;										//col of piece
-		color_piece color;										//color of piece
-		type_piece type;										//type of piece
-		bool alive;										//is this piece alive?
+		int row;								
+		int col;					
+		color_piece color;							
+		type_piece type;						
+		bool alive;	
 
 	public:
-		AbstractPiece(){cout<<" (file my piece.h line 20) AbstractPiece provide an abstract builder. This is not intended to be used in the base class and needs to be overridden in child classes"<<endl;};										
+		AbstractPiece(){};
 
+		int GetRow(){return row;};									
+		int GetCol(){return col;};									
+		bool GetAlive(){return alive;};			
 
-		int GetRaw(){return raw;};									//retun raw
-		int GetCol(){return col;};									//retun col
-		bool GetAlive(){return alive;};								//retun alive status							
-		color_piece GetColor(){return color;};								//retun color
-		type_piece GetType(){return type;};									//retun # for type
+		color_piece GetColor(){return color;};	
+		const char GetNameColor(){return name_color[color];};		
 
-		bool SetAlive(bool a){alive = a;};							//set alive status
-		void ChangePos(int n_raw, int n_col){raw = n_raw;col = n_col;};			//change both raw and col
+		type_piece GetType(){return type;};	
+		const char GetNamePiece(){return name_piece[type];};
 
+		bool SetAlive(bool a){alive = a;};							
+		void ChangePos(int n_row, int n_col){row = n_row;col = n_col;};	
 		
-};
-
-class Nullpiece : public AbstractPiece{
-	public:
-		Nullpiece(int riga, int colonna){raw = riga; col = colonna;	type = Null; alive = false;};
 };
 
 class Rook : public AbstractPiece{
 	public:
-		Rook(color_piece colore, int riga, int colonna){raw = riga;	col = colonna;	color = colore;	type = R; alive = true;};
+		Rook(color_piece colore, int rowa, int colu){row = rowa; col = colu; color = colore; type = rook; alive = true;};
 };
 
 class Knight : public AbstractPiece{
 	public:
-		Knight(color_piece colore, int riga, int colonna) {raw = riga; col = colonna; color = colore; type = N; alive = true;};
+		Knight(color_piece colore, int rowa, int colu) {row = rowa; col = colu; color = colore; type = knight; alive = true;};
 };
 
 class Bishop : public AbstractPiece{
 	public:
-		Bishop(color_piece colore, int riga, int colonna){raw = riga; col = colonna; color = colore; type = B; alive = true;};
+		Bishop(color_piece colore, int rowa, int colu){row = rowa; col = colu; color = colore; type = bishop; alive = true;};
 };
 
 class Queen : public AbstractPiece{
 	public:
-		Queen(color_piece colore, int riga, int colonna){raw = riga; col = colonna; color = colore; type = Q; alive = true;};
+		Queen(color_piece colore, int rowa, int colu){row = rowa; col = colu; color = colore; type = queen; alive = true;};
 };
 
 class Pawn : public AbstractPiece{
 	public:
-		Pawn(color_piece colore, int riga, int colonna){raw = riga; col = colonna; color = colore; type = p; alive = true;};
+		Pawn(color_piece colore, int rowa, int colu){row = rowa; col = colu; color = colore; type = pawn; alive = true;};
 };
 
 class King : public AbstractPiece{
 	public:
-		King(color_piece colore, int riga, int colonna){raw = riga; col = colonna; color = colore; type = K; alive = true;};
+		King(color_piece colore, int riga, int colonna){row = riga; col = colonna; color = colore; type = king; alive = true;};
 };
 
 #endif
