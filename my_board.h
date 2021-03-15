@@ -14,7 +14,7 @@ class board{
 		~board();													//destructor (delete all pieces etc.)
 
 		AbstractPiece * GetPiece(int raw, int col){return thisboard[raw][col];};
-		bool Occupied(int n_raw, int n_col){return (thisboard[n_raw][n_col] -> GetType() != 0);};
+		bool Occupied(int n_raw, int n_col){return (thisboard[n_raw][n_col] != NULL);};
 
 		void Print();												
 		string Unicode(type_piece type, color_piece color); 		//converts type+color in unicode char
@@ -77,10 +77,13 @@ board::~board(){
 void board::Print(){
 	for(int i = 7; i >= 0; i--){
 		for(int j = 0; j < 8; j++){
-			type_piece type = thisboard[i][j] -> GetType();
-			color_piece color = thisboard[i][j] -> GetColor();
 			if(j == 0) cout << "|__";
-			cout << this -> Unicode(type,color);
+			if (thisboard[i][j] != NULL){
+				type_piece type = thisboard[i][j] -> GetType();
+				color_piece color = thisboard[i][j] -> GetColor();
+				cout << this -> Unicode(type,color);
+			}
+			else cout << "  ";
 			if(j != 7) cout << "__|__";
 			else cout << "__|\t" << i+1;
 		}

@@ -17,7 +17,7 @@ class AbstractPiece{
 		bool alive;	
 
 	public:
-		AbstractPiece(){throw " (file my piece.h line 20) AbstractPiece provide an abstract builder. This is not intended to be used in the base class and needs to be overridden in child classes";};										
+		AbstractPiece(){};//cout<<"(file my piece.h line 20) AbstractPiece provide an abstract builder. This is not intended to be used in the base class and needs to be overridden in child classes"<<endl;;};										
 
 
 		int GetRow(){return row;};									
@@ -28,7 +28,7 @@ class AbstractPiece{
 		const char GetNameColor(){return name_color[color];};		
 
 		type_piece GetType(){return type;};	
-		const char GetName(){return name_piece[type];};
+		const char GetNamePiece(){return name_piece[type];};
 
 		bool SetAlive(bool a){alive = a;};							
 		void ChangePos(int n_row, int n_col){row = n_row;col = n_col;};	
