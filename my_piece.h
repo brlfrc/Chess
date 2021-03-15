@@ -17,7 +17,7 @@ class AbstractPiece{
 		bool alive;	
 
 	public:
-		AbstractPiece(){throw "AbstractPiece provide an abstract builder. This is not intended to be used in the base class and needs to be overridden in child classes";};										
+		AbstractPiece(){throw " (file my piece.h line 20) AbstractPiece provide an abstract builder. This is not intended to be used in the base class and needs to be overridden in child classes";};										
 
 
 		int GetRow(){return row;};									
