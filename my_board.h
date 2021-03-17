@@ -1,6 +1,15 @@
 #ifndef my_board_h
 #define my_board_h
 
+#include <string>
+#include <vector>
+#include <iostream>
+#include <cstdint>
+
+using namespace std;
+
+#include "my_piece.h"
+
 class board{
 	private:
 		board * last;												//stores the board before a move 
