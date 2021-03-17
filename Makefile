@@ -18,7 +18,7 @@ TARGET = chess
 # ****************************************************
 # Targets needed to bring the executable up to date
 all:
-	$(CC) $(CFLAGS) -o $(TARGET) main.cpp my_board.h my_chess.h my_piece.h
+	$(CC) $(CFLAGS) -o $(TARGET) main.cpp my_chess.h my_board.h my_piece.h
 
 clean:
 	rm $(TARGET)

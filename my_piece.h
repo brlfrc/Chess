@@ -17,11 +17,13 @@ class AbstractPiece{
 		bool alive;	
 
 	public:
-		AbstractPiece(){};
+		AbstractPiece(type_piece type, color_piece color, int row, int col){
+			row = row; col = col; color = color; type = type; alive = true;
+		};
 
-		int GetRow(){return row;};									
-		int GetCol(){return col;};									
-		bool GetAlive(){return alive;};			
+		int GetRow(){return row;};
+		int GetCol(){return col;};
+		bool GetAlive(){return alive;};
 
 		color_piece GetColor(){return color;};	
 		const char GetNameColor(){return name_color[color];};		
@@ -29,39 +31,39 @@ class AbstractPiece{
 		type_piece GetType(){return type;};	
 		const char GetNamePiece(){return name_piece[type];};
 
-		bool SetAlive(bool a){alive = a;};							
-		void ChangePos(int n_row, int n_col){row = n_row;col = n_col;};	
-		
+		void SetAlive(bool a){alive = a;};
+		void ChangePos(int n_row, int n_col){row = n_row; col = n_col;};
+
 };
 
 class Rook : public AbstractPiece{
 	public:
-		Rook(color_piece colore, int rowa, int colu){row = rowa; col = colu; color = colore; type = rook; alive = true;};
+		Rook(color_piece color, int row, int col) : AbstractPiece(rook, color, row, col){};
 };
 
 class Knight : public AbstractPiece{
 	public:
-		Knight(color_piece colore, int rowa, int colu) {row = rowa; col = colu; color = colore; type = knight; alive = true;};
+		Knight(color_piece color, int row, int col) : AbstractPiece(knight, color, row, col){};
 };
 
 class Bishop : public AbstractPiece{
 	public:
-		Bishop(color_piece colore, int rowa, int colu){row = rowa; col = colu; color = colore; type = bishop; alive = true;};
+		Bishop(color_piece color, int row, int col) : AbstractPiece(bishop, color, row, col){};
 };
 
 class Queen : public AbstractPiece{
 	public:
-		Queen(color_piece colore, int rowa, int colu){row = rowa; col = colu; color = colore; type = queen; alive = true;};
+		Queen(color_piece color, int row, int col) : AbstractPiece(queen, color, row, col){};
 };
 
 class Pawn : public AbstractPiece{
 	public:
-		Pawn(color_piece colore, int rowa, int colu){row = rowa; col = colu; color = colore; type = pawn; alive = true;};
+		Pawn(color_piece color, int row, int col) : AbstractPiece(pawn, color, row, col){};
 };
 
 class King : public AbstractPiece{
 	public:
-		King(color_piece colore, int riga, int colonna){row = riga; col = colonna; color = colore; type = king; alive = true;};
+		King(color_piece color, int row, int col) : AbstractPiece(king, color, row, col){};
 };
 
 #endif
