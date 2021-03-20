@@ -1,7 +1,8 @@
-//c++ -o main main.c
+//c++ -o main main.cpp
 
 #include "my_chess.h"
 
+using namespace std;
 
 int main(){
 
@@ -36,6 +37,8 @@ int main(){
 
 	seconda_mossa[6][5]=false;
 	seconda_mossa[3][5]=true;
+
+	cout<<"\nasjias"<<endl;
 
 	Scacchiera->Move(seconda_mossa, seconda_mossa);
 
