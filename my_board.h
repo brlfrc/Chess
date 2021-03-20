@@ -6,8 +6,6 @@
 #include <iostream>
 #include <cstdint>
 
-using namespace std;
-
 #include "my_piece.h"
 
 class board{
@@ -26,10 +24,11 @@ class board{
 		bool Occupied(int n_raw, int n_col){return (thisboard[n_raw][n_col] != NULL);};
 
 		void Print();												
-		string Unicode(type_piece type, color_piece color); 		//converts type+color in unicode char
+		std::string Unicode(type_piece type, color_piece color); 		//converts type+color in unicode char
 
 		int GetCurrentMoveInt(){return currentmove;};				//returns 0 || 1 for white & black
 		void SetCurrentMoveInt(int a){currentmove = a;};
+		
 		void InvertCurrentMoveInt(){if (currentmove==0)	currentmove=1; else	currentmove=0;};
 
 		bool Castling(bool scan [8][8]);
@@ -43,7 +42,7 @@ class board{
 board::board(){
 
 	thisboard[0][0] = new Rook(white,0,0);
-	thisboard[0][1] = new Knight(white,0,1);
+	thisboard[0][1] = new Knight(white,0,1);	
 	thisboard[0][2] = new Bishop(white,0,2);
 	thisboard[0][3] = new Queen(white,0,3);
 	thisboard[0][4] = new King(white,0,4);
@@ -86,22 +85,22 @@ board::~board(){
 void board::Print(){
 	for(int i = 7; i >= 0; i--){
 		for(int j = 0; j < 8; j++){
-			if(j == 0) cout << "|__";
+			if(j == 0) std::cout << "|__";
 			if (thisboard[i][j] != NULL){
 				type_piece type = thisboard[i][j] -> GetType();
 				color_piece color = thisboard[i][j] -> GetColor();
-				cout << this -> Unicode(type,color);
+				std::cout << this -> Unicode(type,color);
 			}
-			else cout << "  ";
-			if(j != 7) cout << "__|__";
-			else cout << "__|\t" << i+1;
+			else std::cout << "  ";
+			if(j != 7) std::cout << "__|__";
+			else std::cout << "__|\t" << i+1;
 		}
-		cout << "\n" << endl;
+		std::cout << "\n" << std::endl;
 	}
-	cout << "   a     b     c     d     e     f     g     h" << endl;
+	std::cout << "   a     b     c     d     e     f     g     h" << std::endl;
 }
 
-string board::Unicode(type_piece type, color_piece color){
+std::string board::Unicode(type_piece type, color_piece color){
 
 	if(type == rook){	
 		if(color == black) return "Tb";
@@ -194,8 +193,8 @@ bool areSame(bool scan [8][8], bool scan2 [8][8]){
 //-------------------------------------------------------
 //two type of move: shift a piece (1), take a piece
 bool board::Move(bool scan [8][8], bool scan2 [8][8]){ 					
-	
-	//I nedd two scan when a piece is taking, else one is enough. In this case I put scan=scan2
+
+	//I need two scan when a piece is taking, else one is enough. In this case I put scan=scan2
 	bool notaken = areSame (scan, scan2);
 
 	int i_old, j_old, i_new, j_new;
@@ -220,7 +219,7 @@ bool board::Move(bool scan [8][8], bool scan2 [8][8]){
 			}
 		}
 	}
-	cout<<count<<endl;
+
 	if (count==4)
 		return Castling(scan);
 	
@@ -254,7 +253,7 @@ bool board::Move(bool scan [8][8], bool scan2 [8][8]){
 	  	return true;
 	}
 
-	cout<<"\n *****\nError e count "<<count<<"\n ******\n "<<endl;
+	std::cout<<"\n *****\nError e count "<<count<<"\n ******\n "<<std::endl;
 	return false;									//scan failed
 }
 

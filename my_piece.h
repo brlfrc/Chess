@@ -13,8 +13,10 @@ class AbstractPiece{
 		int row;								
 		int col;					
 		color_piece color;							
-		type_piece type;						
-		bool alive;	
+		type_piece type;
+
+		bool alive;
+		bool moved;
 
 	public:
 		AbstractPiece(type_piece Type, color_piece Color, int Row, int Col){
@@ -24,6 +26,7 @@ class AbstractPiece{
 		int GetRow(){return row;};
 		int GetCol(){return col;};
 		bool GetAlive(){return alive;};
+		bool GetMoved(){return moved;};
 
 		color_piece GetColor(){return color;};	
 		const char GetNameColor(){return name_color[color];};		
@@ -32,7 +35,9 @@ class AbstractPiece{
 		const char GetNamePiece(){return name_piece[type];};
 
 		void SetAlive(bool a){alive = a;};
-		void ChangePos(int n_row, int n_col){row = n_row; col = n_col;};
+		void SetMoved(bool a){moved = a;};
+
+		void ChangePos(int n_row, int n_col){row = n_row; col = n_col; this->SetMoved(true);};
 
 };
 
