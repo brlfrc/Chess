@@ -17,8 +17,8 @@ class AbstractPiece{
 		bool alive;	
 
 	public:
-		AbstractPiece(type_piece type, color_piece color, int row, int col){
-			row = row; col = col; color = color; type = type; alive = true;
+		AbstractPiece(type_piece Type, color_piece Color, int Row, int Col){
+			row = Row; col = Col; color = Color; type = Type; alive = true;
 		};
 
 		int GetRow(){return row;};
