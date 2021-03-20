@@ -128,7 +128,7 @@ char board::Unicode(type_piece type, color_piece color){
 
 bool board::Castling(bool scan [8][8]){				
 	if (scan[0][5]==true && scan[0][6]==true && this->GetCurrentMoveInt()==0){					//WHITE
-		thisboard[0][6] = this->GetPiece(0,4);									//king
+		  thisboard[0][6] = this->GetPiece(0,4);									//king
 	    thisboard[0][6]->ChangePos(0,6);
 	  	thisboard[0][4] =NULL;
 
@@ -140,7 +140,7 @@ bool board::Castling(bool scan [8][8]){
 	}
 
 	if (scan[0][2]==true && scan[0][3]==true && this->GetCurrentMoveInt()==0){
-		thisboard[0][2] = this->GetPiece(0,4);									//king
+		  thisboard[0][2] = this->GetPiece(0,4);									//king
 	    thisboard[0][2]->ChangePos(0,2);
 	  	thisboard[0][4] = NULL;
 
@@ -152,7 +152,7 @@ bool board::Castling(bool scan [8][8]){
 	}
 
 	if (scan[7][5]==true && scan[7][6]==true && this->GetCurrentMoveInt()==1){					//BLACK
-		thisboard[7][6] = this->GetPiece(7,4);									//king
+		  thisboard[7][6] = this->GetPiece(7,4);									//king
 	    thisboard[7][6]->ChangePos(7,6);
 	  	thisboard[7][4] = NULL;
 
@@ -164,7 +164,7 @@ bool board::Castling(bool scan [8][8]){
 	}
 
 	if (scan[7][2]==true && scan[7][3]==true && this->GetCurrentMoveInt()==1){
-		thisboard[7][2] = this->GetPiece(7,4);									//king
+		  thisboard[7][2] = this->GetPiece(7,4);									//king
 	    thisboard[7][2]->ChangePos(7,2);
 	  	thisboard[7][4] = NULL;
 
