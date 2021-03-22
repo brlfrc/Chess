@@ -16,9 +16,9 @@ class board{
 		int currentmove;											//can be 0 -> white or 1 -> black
 
 	public:
-		board();													//constructor for a new board with pieces
-		board(board * oldBoard);									//copy constructor
-		~board();													//destructor (delete all pieces etc.)
+		board();
+		board(board * oldBoard);													
+		~board();													
 
 		AbstractPiece * GetPiece(int raw, int col){return thisboard[raw][col];};
 		bool Occupied(int n_raw, int n_col){return (thisboard[n_raw][n_col] != NULL);};
@@ -31,14 +31,16 @@ class board{
 		
 		void InvertCurrentMoveInt(){if (currentmove==0)	currentmove=1; else	currentmove=0;};
 
-		bool Castling(bool scan [8][8]);
+		void Remember(){delete last; last = new board(this);}; //save board
+		void Restore();  //restore last board
 
+		bool Castling(bool scan [8][8]);
 		//Double can the board and compare two boards and find the move, if box occupied scan =true, else false
-		bool Move(bool scan [8][8], bool scan2 [8][8]);				
+		bool Move(bool scan [8][8], bool scan2 [8][8]);
+		bool Move(AbstractPiece* piece, int row_f, int col_f);			
 };
 
-
-
+//----------------------------------------------------
 board::board(){
 
 	thisboard[0][0] = new Rook(white,0,0);
@@ -73,6 +75,15 @@ board::board(){
 	currentmove = 0;
 }
 
+board::board(board * oldBoard){
+	for(int i = 0; i < 8; i++){
+		for(int j = 0; j < 8; j++){
+			thisboard[i][j] = oldBoard->GetPiece(i,j);
+		}
+	}
+
+	currentmove = oldBoard -> GetCurrentMoveInt();
+}
 board::~board(){
 	delete last;
 	for(int i = 0; i < 8; i++){
@@ -129,6 +140,16 @@ std::string board::Unicode(type_piece type, color_piece color){
 	return "  ";
 }
 
+//------------------------------------------------
+void board::Restore(){
+	for(int i = 0; i < 8; i++){
+		for(int j = 0; j < 8; j++){
+			delete thisboard[i][j];
+			thisboard[i][j] = last -> GetPiece(i,j);
+		}
+	}
+	currentmove = last -> GetCurrentMoveInt();
+}
 //------------------------------------------------
 
 bool board::Castling(bool scan [8][8]){				
@@ -256,5 +277,26 @@ bool board::Move(bool scan [8][8], bool scan2 [8][8]){
 	std::cout<<"\n *****\nError e count "<<count<<"\n ******\n "<<std::endl;
 	return false;									//scan failed
 }
+
+bool board::Move(AbstractPiece* piece, int row_f, int col_f){
+	int row_i = piece->GetRow(); 
+	int col_i = piece->GetCol();
+
+	if (thisboard[row_i][col_i]!=NULL){
+		if (thisboard[row_f][col_f]!=NULL)			
+			thisboard[row_f][col_f]->SetAlive(false);
+
+		thisboard[row_f][col_f] = this->GetPiece(row_i,col_i);
+		thisboard[row_f][col_f]->ChangePos(row_f,col_f);
+  		thisboard[row_i][col_i] = NULL;
+  		this->InvertCurrentMoveInt();
+  		return true; 						//true= move ok
+	}
+	else{
+		std::cout<<"(line 282, my_board.h) error moving piece"<<std::endl;
+		return false;                       //false= move error
+	}
+}
+
 
 #endif
