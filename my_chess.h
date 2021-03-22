@@ -2,6 +2,7 @@
 #define my_chess_h
 
 #include "my_board.h"
+#include <cmath>
 
 //----------------------------------------------------------------
 //Game Function. Obv not really of the library, but useful
@@ -12,10 +13,8 @@ class Game{
 		board * currentgame= new board();
 
 		bool whitechecked;
-		bool whitemated;
 
 		bool blackchecked;
-		bool blackmated;
 
 		bool possiblemoves [8][8];
 
@@ -23,18 +22,24 @@ class Game{
 		Game();
 
 		//Possible moves of piece in the position row, col
+		//N.B: in this possible moves i don't consider any checks, i'll consider it during the move
 		bool Getpossiblemoves(int i, int j){return possiblemoves[i][j];};
 		void Studypossiblemoves(AbstractPiece* piece);                    
 		void Resetpossiblemoves(){for(int i =0; i<8;i++) {for(int j=0; j<8;j++) possiblemoves[i][j]=false;} };
-		bool CanMove(AbstractPiece* piece, int row_f, int col_f);   //piece ---move?---->(row_f,col_f)
+		bool CanMove(AbstractPiece* piece, int row, int col);   //make possiblemove and return it
+		bool ValidMove(AbstractPiece* piece, int row_f, int col_f);   //Considering checks a move is valid?
 
-		//checked
+		//check
 		bool GetCheck(color_piece color){if (color==white) return whitechecked; else return blackchecked;}
-		bool GetMated(color_piece color){if (color==white) return whitemated; else return blackmated;}
 		void ResetChecks(color_piece color){if (color==white) whitechecked=false; else blackchecked=false;}
-		int* FindKing(color_piece color);
-		void CheckChecks(color_piece color);
-		void CheckMated(color_piece color);        //missing
+		
+		AbstractPiece* FindKing(color_piece color);
+		bool BoxCheck(color_piece color,int row, int col);
+		bool CheckChecks(color_piece color);
+		AbstractPiece* FindCheckPiece(color_piece color);
+		bool BoxAttack(color_piece color,int row, int col);   //There is a piece that can go in (row, col)
+		int* LineAttack(AbstractPiece* King, AbstractPiece* Attackpiece, int* size);  //give the line attack
+		bool CheckMated(color_piece color);        //missing
 
 		//moving
 
@@ -361,9 +366,12 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 				for(int b = -1; b < 2; b++){
 					bool rowbool = row+a >= 0 && row+a < 8;
 					bool colbool = col+b >= 0 && col+b < 8;
-					if(rowbool && colbool) 
-						if(currentgame -> GetPiece(row+a,col+b) -> GetColor() != color)
+					if(rowbool && colbool){
+						if(currentgame -> GetPiece(row+a,col+b) == NULL)
 							possiblemoves[row+a][col+b] = true;
+						else if(currentgame -> GetPiece(row+a,col+b) -> GetColor() != color)
+							possiblemoves[row+a][col+b] = true;
+					} 	
 				}
 			}
 		}
@@ -420,20 +428,34 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 	return;
 }
 
-bool Game::CanMove(AbstractPiece* piece, int row_f, int col_f){
+
+bool Game::CanMove(AbstractPiece* piece, int row, int col){
 	this->Studypossiblemoves(piece);
-	return this->Getpossiblemoves(row_f, col_f);
+	return  possiblemoves[row][col];
+}
+
+// A move is valid if a piece can go in the final position and if that's not open to some enemy checks.
+// I need two function (CanMove and ValidMove), so CheckChecks can work without circoular call.
+bool Game::ValidMove(AbstractPiece* piece, int row_f, int col_f){
+	currentgame->Remember();
+
+	if (this->CanMove(piece,row_f, col_f)== true){
+		currentgame->Move(piece, row_f, col_f);
+		if (this->CheckChecks(piece->GetColor())==false){
+			currentgame->Restore();
+			return true;
+		}
+	}
+	currentgame->Restore();
+	return false;
 }
 //----------------------------------------------------------------
-int* Game::FindKing(color_piece color){
-	int* pos;
+AbstractPiece* Game::FindKing(color_piece color){
 	for(int i = 0; i < 8; i++){
 		for(int j = 0; j < 8; j++){
 			if (currentgame->GetPiece(i,j)!=NULL){
 				if (currentgame->GetPiece(i,j)->GetType()==king && currentgame->GetPiece(i,j)->GetColor()==color){
-					pos[0]=i;
-					pos[1]=j;
-					return pos;
+					return currentgame->GetPiece(i,j);
 				}
 
 			}
@@ -441,30 +463,229 @@ int* Game::FindKing(color_piece color){
 	}
 }
 
-void Game::CheckChecks(color_piece color){
-	this->ResetChecks(color);
-
-	int* pos=this->FindKing(color);
-
+bool Game::BoxCheck(color_piece color,int row, int col){
 	for(int i = 0; i < 8; i++){
 		for(int j = 0; j < 8; j++){
 			if (currentgame->GetPiece(i,j)!=NULL){
 				if (currentgame->GetPiece(i,j)->GetColor()!=color){
-					if (CanMove(currentgame->GetPiece(i,j), pos[0], pos[1])==true){
-						if (color==white) whitechecked==true;
-						if (color==black) blackchecked==true;
+					if (CanMove(currentgame->GetPiece(i,j), row, col)==true){
+						return true;
 					}
 				}
 
 			}
 		}
 	}
+	return false;
 }
 
-void Game::CheckMated(color_piece color){
-	//Controlla le case vicine al re
-	//Cerca chi da lo scacco e lungo che direzioni e controlla che ogni pezzo non possa interporsi o mangiare
-	//NB poni attenzione agli scacchi multipli
+bool Game::CheckChecks(color_piece color){
+	this->ResetChecks(color);
+
+	AbstractPiece* king=this->FindKing(color);
+
+	if (BoxCheck(color, king->GetRow(), king->GetCol())==true){
+		if (color==white) whitechecked==true;
+		if (color==black) blackchecked==true;
+		return true;
+	}
+	return false;
+}
+
+AbstractPiece* Game::FindCheckPiece(color_piece color){
+	this->ResetChecks(color);
+	AbstractPiece* Attackpiece;
+
+	AbstractPiece* king=this->FindKing(color);
+	int index=0;
+
+	for(int i = 0; i < 8; i++){
+		for(int j = 0; j < 8; j++){
+			if (currentgame->GetPiece(i,j)!=NULL){
+				if (currentgame->GetPiece(i,j)->GetColor()!=color){
+					if (CanMove(currentgame->GetPiece(i,j), king->GetRow(), king->GetCol())==true){
+						Attackpiece=currentgame->GetPiece(i,j);
+						index=index+1;				
+					}
+				}
+			}
+		}
+	}
+	if (index > 1) return NULL;
+	else return Attackpiece;
+}
+
+bool Game::BoxAttack(color_piece color,int row, int col){
+	for(int i = 0; i < 8; i++){
+		for(int j = 0; j < 8; j++){
+			if (currentgame->GetPiece(i,j)!=NULL){
+				if (currentgame->GetPiece(i,j)->GetColor()==color){
+					if (ValidMove(currentgame->GetPiece(i,j), row, col)==true){
+						return true;
+					}
+				}
+
+			}
+		}
+	}
+	return false;
+}
+
+int* Game::LineAttack(AbstractPiece* King, AbstractPiece* Attackpiece, int* size){
+	//Return the point in this way. line[1,3,5]=row_1,2,3 while line[2,4,6]=col_1,2,3 
+	//N.B return also the position of Attackpiece 
+	int* line;
+	int index=0;
+	if (Attackpiece->GetType()==rook || Attackpiece->GetType()==queen){
+		if (King->GetCol()==Attackpiece->GetCol()){
+			if (King->GetRow()>Attackpiece->GetRow()){
+				for (int i = Attackpiece->GetRow(); i<King->GetRow(); i++){
+					line[index]= i;
+					line[index+1]=King->GetCol();
+					index=index+2;
+				}
+				size[0]= index-1;
+				return line;
+			}
+			else {
+				for (int i = King->GetRow(); i<Attackpiece->GetRow()+1; i++){
+					line[index]= i;
+					line[index+1]=King->GetCol();
+					index=index+2;
+				}
+				size[0]= index-1;
+				return line;
+			}
+		}
+		else{
+			if (King->GetCol()>Attackpiece->GetCol()){
+				for (int i = Attackpiece->GetCol(); i<King->GetCol(); i++){
+					line[index]= King->GetRow(); 
+					line[index+1]=i;
+					index=index+2;
+				}
+				size[0]= index-1;
+				return line;
+			}
+			else {
+				for (int i = King->GetCol(); i<Attackpiece->GetCol()+1; i++){
+					line[index]= King->GetRow();
+					line[index+1]= i;
+					index=index+2;
+				}
+				size[0]= index-1;
+				return line;
+			}
+		}
+	}
+
+	if (Attackpiece->GetType()==bishop || Attackpiece->GetType()==queen){
+		if (King->GetCol()>Attackpiece->GetCol()){
+			if (King->GetRow()>Attackpiece->GetRow()){
+				for (int i = 0; i < (King->GetRow()-Attackpiece->GetRow()); i++){
+					line[index]= Attackpiece->GetRow() + i;
+					line[index+1]= Attackpiece->GetCol() + i;
+					index=index+2;
+				}
+				size[0]= index-1;
+				return line;
+			}
+			else {
+				for (int i = 0; i < (Attackpiece->GetRow()-King->GetRow()); i++){
+					line[index]= Attackpiece->GetRow() - i;
+					line[index+1]= Attackpiece->GetCol() + i;
+					index=index+2;
+				}
+				size[0]= index-1;
+				return line;
+			}
+		}
+		else{
+			if (King->GetRow()>Attackpiece->GetRow()){
+				for (int i = 0; i < (King->GetRow()-Attackpiece->GetRow()); i++){
+					line[index]= Attackpiece->GetRow() + i;
+					line[index+1]= Attackpiece->GetCol() - i;
+					index=index+2;
+				}
+				size[0]= index-1;
+				return line;
+			}
+			else {
+				for (int i = 0; i < (Attackpiece->GetRow()-King->GetRow()); i++){
+					line[index]= Attackpiece->GetRow() - i;
+					line[index+1]= Attackpiece->GetCol() - i;
+					index=index+2;
+				}
+				size[0]= index-1;
+				return line;
+			}
+		}
+	}
+}
+
+bool Game::CheckMated(color_piece color){
+	if (CheckChecks(color)==false)
+		return false;
+
+	//I check if king can move in the neighbors boxes
+	AbstractPiece* King=this->FindKing(color);
+	int row= King->GetRow();
+	int col= King->GetCol();
+
+	for(int a = -1; a < 2; a++){
+		for(int b = -1; b < 2; b++){
+			bool rowbool = row+a >= 0 && row+a < 8;
+			bool colbool = col+b >= 0 && col+b < 8;
+			if(rowbool && colbool){
+				if (this->ValidMove(King,row+a, col+b)== true){
+					return false;
+				}
+			} 	
+		}
+	}
+
+	AbstractPiece* Attackpiece=FindCheckPiece(color);
+	//A double or more attack, after checking that the king can't move, it's mated
+	//Findcheckpiece  return Null for multiple attack
+	if (Attackpiece==NULL) return true;
+	//Singular piece check
+	
+	//pawn or knight attack
+	if (Attackpiece->GetType()==pawn || Attackpiece->GetType()==knight){
+		if (BoxAttack(color,Attackpiece->GetRow(), Attackpiece->GetCol())==true) return false;
+		else return true;
+	}
+
+	//rook attack
+	if (Attackpiece->GetType()==rook){
+		int* size;
+		int* line = this->LineAttack(King, Attackpiece, size);
+		for (int i=0; i<size[0]; i=i+2){
+			if (BoxAttack(color,line[i], line[i+1])==true) return false;
+		}
+		return true;
+	}
+
+	//bishop attack
+	if (Attackpiece->GetType()==bishop){
+		int* size;
+		int* line = this->LineAttack(King, Attackpiece, size);
+		for (int i=0; i<size[0]; i=i+2){
+			if (BoxAttack(color,line[i], line[i+1])==true) return false;
+		}
+		return true;
+	}
+
+	//queen attack
+	if (Attackpiece->GetType()==queen){
+		int* size;
+		int* line = this->LineAttack(King, Attackpiece, size);
+		for (int i=0; i<size[0]; i=i+2){
+			if (BoxAttack(color,line[i], line[i+1])==true) return false;
+		}
+		return true;
+	}
+
 }
 //----------------------------------------------------------------
 
