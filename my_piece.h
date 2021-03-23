@@ -22,6 +22,9 @@ class AbstractPiece{
 		AbstractPiece(type_piece Type, color_piece Color, int Row, int Col){
 			row = Row; col = Col; color = Color; type = Type; alive = true;
 		};
+		AbstractPiece(AbstractPiece* Piece){
+			row = Piece->GetRow(); col = Piece->GetCol(); color = Piece->GetColor(); type = Piece->GetType(); alive = Piece->GetAlive();
+		};
 
 		int GetRow(){return row;};
 		int GetCol(){return col;};
