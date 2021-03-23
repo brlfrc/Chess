@@ -13,31 +13,31 @@ class board{
 		board * last;												//stores the board before a move 
 		AbstractPiece * thisboard [8][8];							//the board, with all the pieces
 
-		int currentmove;											//can be 0 -> white or 1 -> black
+		color_piece turn;											//can be 0 -> white or 1 -> black
 
 	public:
 		board();
 		board(board * oldBoard);													
 		~board();													
 
-		AbstractPiece * GetPiece(int raw, int col){return thisboard[raw][col];};
+		AbstractPiece * GetPiece(int row, int col){return thisboard[row][col];};
 		bool Occupied(int n_raw, int n_col){return (thisboard[n_raw][n_col] != NULL);};
 
 		void Print();												
 		std::string Unicode(type_piece type, color_piece color); 		//converts type+color in unicode char
 
-		int GetCurrentMoveInt(){return currentmove;};				//returns 0 || 1 for white & black
-		void SetCurrentMoveInt(int a){currentmove = a;};
+		color_piece GetTurn(){return turn;};				//returns 0 || 1 for white & black
+		void SetTurn(color_piece a){turn = a;};
 		
-		void InvertCurrentMoveInt(){if (currentmove==0)	currentmove=1; else	currentmove=0;};
+		void ChangeTurn(){if (turn==white)	turn=black; else	turn=white;};
 
-		void Remember(){delete last; last = new board(this);}; //save board
+		void Remember(){last = new board(this);}; //save board
 		void Restore();  //restore last board
 
 		bool Castling(bool scan [8][8]);
 		//Double can the board and compare two boards and find the move, if box occupied scan =true, else false
 		bool Move(bool scan [8][8], bool scan2 [8][8]);
-		bool Move(AbstractPiece* piece, int row_f, int col_f);			
+		void Move(AbstractPiece* piece, int row_f, int col_f);			
 };
 
 //----------------------------------------------------
@@ -72,17 +72,19 @@ board::board(){
 		}
 	}
 
-	currentmove = 0;
+	turn = white;
 }
 
 board::board(board * oldBoard){
 	for(int i = 0; i < 8; i++){
 		for(int j = 0; j < 8; j++){
-			thisboard[i][j] = oldBoard->GetPiece(i,j);
+			if (oldBoard->GetPiece(i,j)!=NULL)
+				thisboard[i][j] = new AbstractPiece(oldBoard->GetPiece(i,j));
+			else
+				thisboard[i][j] = NULL;
 		}
 	}
-
-	currentmove = oldBoard -> GetCurrentMoveInt();
+	turn = oldBoard -> GetTurn();
 }
 board::~board(){
 	delete last;
@@ -104,11 +106,11 @@ void board::Print(){
 			}
 			else std::cout << "  ";
 			if(j != 7) std::cout << "__|__";
-			else std::cout << "__|\t" << i+1;
+			else std::cout << "__|\t" << i;
 		}
 		std::cout << "\n" << std::endl;
 	}
-	std::cout << "   a     b     c     d     e     f     g     h" << std::endl;
+	std::cout << "    0      1      2      3      4      5      6      7" << std::endl;
 }
 
 std::string board::Unicode(type_piece type, color_piece color){
@@ -144,16 +146,15 @@ std::string board::Unicode(type_piece type, color_piece color){
 void board::Restore(){
 	for(int i = 0; i < 8; i++){
 		for(int j = 0; j < 8; j++){
-			delete thisboard[i][j];
 			thisboard[i][j] = last -> GetPiece(i,j);
 		}
 	}
-	currentmove = last -> GetCurrentMoveInt();
+	turn = last -> GetTurn();
 }
 //------------------------------------------------
 
 bool board::Castling(bool scan [8][8]){				
-	if (scan[0][5]==true && scan[0][6]==true && this->GetCurrentMoveInt()==0){					//WHITE
+	if (scan[0][5]==true && scan[0][6]==true && this->GetTurn()==white){					//WHITE
 		thisboard[0][6] = this->GetPiece(0,4);									//king
 	    thisboard[0][6]->ChangePos(0,6);
 	  	thisboard[0][4] =NULL;
@@ -165,7 +166,7 @@ bool board::Castling(bool scan [8][8]){
 	  	return true;
 	}
 
-	if (scan[0][2]==true && scan[0][3]==true && this->GetCurrentMoveInt()==0){
+	if (scan[0][2]==true && scan[0][3]==true && this->GetTurn()==white){
 		thisboard[0][2] = this->GetPiece(0,4);									//king
 	    thisboard[0][2]->ChangePos(0,2);
 	  	thisboard[0][4] = NULL;
@@ -177,7 +178,7 @@ bool board::Castling(bool scan [8][8]){
 	  	return true;
 	}
 
-	if (scan[7][5]==true && scan[7][6]==true && this->GetCurrentMoveInt()==1){					//BLACK
+	if (scan[7][5]==true && scan[7][6]==true && this->GetTurn()==black){					//BLACK
 		thisboard[7][6] = this->GetPiece(7,4);									//king
 	    thisboard[7][6]->ChangePos(7,6);
 	  	thisboard[7][4] = NULL;
@@ -189,7 +190,7 @@ bool board::Castling(bool scan [8][8]){
 	  	return true;
 	}
 
-	if (scan[7][2]==true && scan[7][3]==true && this->GetCurrentMoveInt()==1){
+	if (scan[7][2]==true && scan[7][3]==true && this->GetTurn()==black){
 		thisboard[7][2] = this->GetPiece(7,4);									//king
 	    thisboard[7][2]->ChangePos(7,2);
 	  	thisboard[7][4] = NULL;
@@ -223,7 +224,7 @@ bool board::Move(bool scan [8][8], bool scan2 [8][8]){
 
 	for(int i =0; i<8; i++){
 		for(int j=0; j<8; j++){
-			if (this->Occupied(i,j)!=scan[i][j] && this->Occupied(i,j)== true && this->GetPiece(i,j)->GetColor()==this->GetCurrentMoveInt()){
+			if (this->Occupied(i,j)!=scan[i][j] && this->Occupied(i,j)== true && this->GetPiece(i,j)->GetColor()==this->GetTurn()){
 				i_old= i;
 				j_old= j;
 				count++;
@@ -249,18 +250,18 @@ bool board::Move(bool scan [8][8], bool scan2 [8][8]){
 	    thisboard[i_new][j_new]->ChangePos(i_new,j_new);
 	  	thisboard[i_old][j_old] = NULL;
 
-	  	this->InvertCurrentMoveInt();
+	  	this->ChangeTurn();
 	  	return true;
 	}
 
 	// Take an other piece: that's critic. I can't find an easy way to understand which piece is taken
 	// So i suppose two scan, in the first the enemy's piece dissapears and in the second one i'll put the piece
-	if (count ==1 && this->GetPiece(i_new,j_new)->GetColor()!=this->GetCurrentMoveInt()){				
+	if (count ==1 && this->GetPiece(i_new,j_new)->GetColor()!=this->GetTurn()){				
 		thisboard[i_new][j_new]->SetAlive(false);										
 		
 		for(int i =0; i<8; i++){
 			for(int j=0; j<8; j++)
-				if (this->Occupied(i,j)!=scan2[i][j] && this->Occupied(i,j)== true && this->GetPiece(i,j)->GetColor()==this->GetCurrentMoveInt()){
+				if (this->Occupied(i,j)!=scan2[i][j] && this->Occupied(i,j)== true && this->GetPiece(i,j)->GetColor()==this->GetTurn()){
 					i_old= i;
 					j_old= j;
 					count++;
@@ -270,7 +271,7 @@ bool board::Move(bool scan [8][8], bool scan2 [8][8]){
 	    thisboard[i_new][j_new]->ChangePos(i_new,j_new);
 	  	thisboard[i_old][j_old] = NULL;
 
-	  	this->InvertCurrentMoveInt();
+	  	this->ChangeTurn();
 	  	return true;
 	}
 
@@ -278,7 +279,7 @@ bool board::Move(bool scan [8][8], bool scan2 [8][8]){
 	return false;									//scan failed
 }
 
-bool board::Move(AbstractPiece* piece, int row_f, int col_f){
+void board::Move(AbstractPiece* piece, int row_f, int col_f){
 	int row_i = piece->GetRow(); 
 	int col_i = piece->GetCol();
 
@@ -289,13 +290,11 @@ bool board::Move(AbstractPiece* piece, int row_f, int col_f){
 		thisboard[row_f][col_f] = this->GetPiece(row_i,col_i);
 		thisboard[row_f][col_f]->ChangePos(row_f,col_f);
   		thisboard[row_i][col_i] = NULL;
-  		this->InvertCurrentMoveInt();
-  		return true; 						//true= move ok
 	}
 	else{
 		std::cout<<"(line 282, my_board.h) error moving piece"<<std::endl;
-		return false;                       //false= move error
 	}
+
 }
 
 
