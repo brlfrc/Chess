@@ -13,13 +13,12 @@ class Game{
 		board * currentgame= new board();
 
 		bool whitechecked;
-
 		bool blackchecked;
 
 		bool possiblemoves [8][8];
 
 	public:
-		Game();
+		Game(){};
 
 		//Possible moves of piece in the position row, col
 		//N.B: in this possible moves i don't consider any checks, i'll consider it during the move
@@ -42,7 +41,8 @@ class Game{
 		bool CheckMated(color_piece color);        //missing
 
 		//moving
-
+		bool Turn(color_piece color, int row_i, int col_i, int row_f, int col_f);
+		void Match();
 };
 
 //----------------------------------------------------------------
@@ -50,25 +50,20 @@ class Game{
 void Game::Studypossiblemoves(AbstractPiece* piece){
 	this->Resetpossiblemoves();
 
-	if (currentgame->GetCurrentMoveInt()==0 && whitechecked==true){
-
-	}
-	if (currentgame->GetCurrentMoveInt()==0 && blackchecked==true){
-
-	}
 	if (piece== NULL){
-		std::cout<<"(line 52, my_chess.h) Error, there is no piece in this position"<<std::endl;
+		std::cout<<"(line 54, my_chess.h) Error, there is no piece in this position"<<std::endl;
 		return;
 	}
 
 	color_piece color= piece->GetColor();
 	int row = piece->GetRow();
 	int col = piece->GetCol();
+	//std::cout<<" "<<piece->GetColor()<<" "<<piece->GetRow()<<" "<<piece->GetCol()<<" "<<piece->GetType()<<" "<<std::endl;
+
 
 	switch (piece->GetType()){
 
-		case (rook):{
-			
+		case rook:{
 			int a = 1;
 			while(col+a<8){
 				if(currentgame -> Occupied(row,col+a) == false)
@@ -124,9 +119,10 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 				}
 				a++;
 			}
+			break;
 		}
 
-		case (knight):{
+		case knight:{
 
 			if(row+1<8 && col+2<8){
 				if (currentgame -> Occupied(row+1,col+2) == false)
@@ -135,24 +131,24 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 					possiblemoves[row+1][col+2] = true;
 			}
 
-			if(row-1<8 && col+2<8){
+			if(row-1>=0 && col+2<8){
 				if (currentgame -> Occupied(row-1,col+2) == false)
 					possiblemoves[row-1][col+2] = true;
 				else if (currentgame -> GetPiece(row-1,col+2) -> GetColor() != color)
 					possiblemoves[row-1][col+2] = true;
 			}
 
-			if(row+1<8 && col-2<8){
+			if(row+1<8 && col-2>=0){
 				if (currentgame -> Occupied(row+1,col-2) == false)
 					possiblemoves[row+1][col-2] = true;
-				else if (currentgame -> GetPiece(row+1,col+2) -> GetColor() != color)
+				else if (currentgame -> GetPiece(row+1,col-2) -> GetColor() != color)
 					possiblemoves[row+1][col-2] = true;
 			}
 
-			if(row-1<8 && col-2<8){
+			if(row-1>=0 && col-2>=0){
 				if (currentgame -> Occupied(row-1,col-2) == false)
 					possiblemoves[row-1][col-2] = true;
-				else if (currentgame -> GetPiece(row+1,col+2) -> GetColor() != color)
+				else if (currentgame -> GetPiece(row-1,col-2) -> GetColor() != color)
 					possiblemoves[row-1][col-2] = true;
 			}
 
@@ -163,36 +159,39 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 					possiblemoves[row+2][col+1] = true;
 			}
 
-			if(row-2<8 && col+1<8){
+			if(row-2>=0 && col+1<8){
 				if (currentgame -> Occupied(row-2,col+1) == false)
 					possiblemoves[row-2][col+1] = true;
-				else if (currentgame -> GetPiece(row-1,col+1) -> GetColor() != color)
+				else if (currentgame -> GetPiece(row-2,col+1) -> GetColor() != color)
 					possiblemoves[row-2][col+1] = true;
 			}
 
-			if(row+2<8 && col-1<8){
+			if(row+2<8 && col-1>=0){
 				if (currentgame -> Occupied(row+2,col-1) == false)
 					possiblemoves[row+2][col-1] = true;
-				else if (currentgame -> GetPiece(row+1,col+2) -> GetColor() != color)
+				else if (currentgame -> GetPiece(row+2,col-1) -> GetColor() != color)
 					possiblemoves[row+2][col-1] = true;
 			}
 
-			if(row-2<8 && col-1<8){
+
+			if(row-2>=0 && col-1>=0){
 				if (currentgame -> Occupied(row-2,col-1) == false)
 					possiblemoves[row-2][col-1] = true;
-				else if (currentgame -> GetPiece(row+1,col+2) -> GetColor() != color)
+				else if (currentgame -> GetPiece(row-2,col-1) -> GetColor() != color)
 					possiblemoves[row-2][col-1] = true;
 			}
+
+			break;
 		}
+		
 
-		case(bishop):{
-
+		case bishop:{
 			int a = 1;
-			while(col+a<8 && col+a<8){
-				if(currentgame -> Occupied(row,col+a) == false)
+			while(row+a<8 && col+a<8){
+				if(currentgame -> Occupied(row+a,col+a) == false)
 					possiblemoves[row+a][col+a] = true;
 				else{
-					if(currentgame->GetPiece(row,col+a)->GetColor() != color){
+					if(currentgame->GetPiece(row+a,col+a)->GetColor() != color){
 						possiblemoves[row+a][col+a] = true;
 						break;
 					}
@@ -202,7 +201,7 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 			}
 
 			a = 1;
-			while(col+a<8 && col-a>=0){
+			while(row+a<8 && col-a>=0){
 				if(currentgame -> Occupied(row+a,col-a) == false)
 					possiblemoves[row+a][col-a] = true;
 				else{
@@ -216,7 +215,7 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 			}
 
 			a = 1;
-			while(col-a>=8 && col+a<0){
+			while(row-a>=0 && col+a<8){
 				if(currentgame -> Occupied(row-a,col+a) == false)
 					possiblemoves[row-a][col+a] = true;
 				else{
@@ -231,7 +230,7 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 
 
 			a = 1;
-			while(col-a>=8 && col-a>=8){
+			while(row-a>=0 && col-a>=0){
 				if(currentgame -> Occupied(row-a,col-a) == false)
 					possiblemoves[row-a][col-a] = true;
 				else{
@@ -243,9 +242,10 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 				}
 				a++;
 			}
+			break;
 		}
 
-		case(queen):{
+		case queen:{
 
 			int a = 1;
 			while(col+a<8){
@@ -304,11 +304,11 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 			}
 
 			a = 1;
-			while(col+a<8 && col+a<8){
-				if(currentgame -> Occupied(row,col+a) == false)
+			while(row+a<8 && col+a<8){
+				if(currentgame -> Occupied(row+a,col+a) == false)
 					possiblemoves[row+a][col+a] = true;
 				else{
-					if(currentgame->GetPiece(row,col+a)->GetColor() != color){
+					if(currentgame->GetPiece(row+a,col+a)->GetColor() != color){
 						possiblemoves[row+a][col+a] = true;
 						break;
 					}
@@ -318,7 +318,7 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 			}
 
 			a = 1;
-			while(col+a<8 && col-a>=0){
+			while(row+a<8 && col-a>=0){
 				if(currentgame -> Occupied(row+a,col-a) == false)
 					possiblemoves[row+a][col-a] = true;
 				else{
@@ -332,7 +332,7 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 			}
 
 			a = 1;
-			while(col-a>=8 && col+a<0){
+			while(row-a>=0 && col+a<8){
 				if(currentgame -> Occupied(row-a,col+a) == false)
 					possiblemoves[row-a][col+a] = true;
 				else{
@@ -347,7 +347,7 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 
 
 			a = 1;
-			while(col-a>=8 && col-a>=8){
+			while(row-a>=0 && col-a>=0){
 				if(currentgame -> Occupied(row-a,col-a) == false)
 					possiblemoves[row-a][col-a] = true;
 				else{
@@ -359,9 +359,10 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 				}
 				a++;
 			}
+			break;
 		}
 
-		case(king):{
+		case king:{
 			for(int a = -1; a < 2; a++){
 				for(int b = -1; b < 2; b++){
 					bool rowbool = row+a >= 0 && row+a < 8;
@@ -374,10 +375,12 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 					} 	
 				}
 			}
+			break;
 		}
 
-		case(pawn):{
+		case pawn :{
 			if(color == white){
+
 				if(currentgame->GetPiece(row,col)->GetMoved()==false){
 					if(currentgame -> Occupied(row+1, col) == false){
 						possiblemoves[row+1][col] = true;
@@ -392,15 +395,18 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 					}
 				}
 				if(row + 1 < 8 && col + 1 < 8){
-					if(currentgame -> GetPiece(row+1,col+1) -> GetColor() != color && currentgame -> Occupied(row+1,col+1))
-						possiblemoves[row+1][col+1] = true;
+					if(currentgame -> Occupied(row+1,col+1)==true)
+						if(currentgame -> GetPiece(row+1,col+1) -> GetColor() != color)
+							possiblemoves[row+1][col+1] = true;
 				}
 				if(row + 1 < 8 && col - 1 >= 0){
-					if(currentgame -> GetPiece(row+1,col-1) -> GetColor() != color && currentgame -> Occupied(row+1,col-1))
-						possiblemoves[row+1][col-1] = true;
+					if(currentgame -> Occupied(row+1,col-1)==true)
+						if(currentgame -> GetPiece(row+1,col-1) -> GetColor() != color)
+							possiblemoves[row+1][col-1] = true;
 				}
 			}
-			if(color == black){
+			if (color == black){
+				
 				if(currentgame->GetPiece(row,col)->GetMoved()==false){
 					if(currentgame -> Occupied(row-1, col) == false){
 						possiblemoves[row-1][col] = true;
@@ -412,17 +418,21 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 				else{
 					if(row-1 >= 0){
 						if(currentgame -> Occupied(row-1, col) == false) possiblemoves[row-1][col] = true;
-					} 
+					}
 				}
 				if(row - 1 >= 0 && col + 1 < 8){
-					if(currentgame -> GetPiece(row-1,col+1) -> GetColor() != color && currentgame -> Occupied(row-1,col+1))
-						possiblemoves[row-1][col+1] = true;
+					if(currentgame -> Occupied(row-1,col+1)==true)
+						if(currentgame -> GetPiece(row-1,col+1) -> GetColor() != color)
+							possiblemoves[row-1][col+1] = true;
 				}
+
 				if(row - 1 >= 0 && col - 1 >= 0){
-					if(currentgame -> GetPiece(row-1,col-1) -> GetColor() != color && currentgame -> Occupied(row-1,col-1))
-						possiblemoves[row-1][col-1] = true;
+					if(currentgame -> Occupied(row-1,col-1)==true)
+						if(currentgame -> GetPiece(row-1,col-1) -> GetColor() != color)
+							possiblemoves[row-1][col-1] = true;
 				}
 			}
+			break;
 		}
 	}
 	return;
@@ -445,10 +455,14 @@ bool Game::ValidMove(AbstractPiece* piece, int row_f, int col_f){
 			currentgame->Restore();
 			return true;
 		}
+		else{
+			std::cout<<"(line 455, my_chess.h) there is or open check"<<std::endl;
+		}
 	}
 	currentgame->Restore();
 	return false;
 }
+
 //----------------------------------------------------------------
 AbstractPiece* Game::FindKing(color_piece color){
 	for(int i = 0; i < 8; i++){
@@ -464,10 +478,12 @@ AbstractPiece* Game::FindKing(color_piece color){
 }
 
 bool Game::BoxCheck(color_piece color,int row, int col){
+
 	for(int i = 0; i < 8; i++){
 		for(int j = 0; j < 8; j++){
 			if (currentgame->GetPiece(i,j)!=NULL){
 				if (currentgame->GetPiece(i,j)->GetColor()!=color){
+					//std::cout<<"i"<<i<< "  j "<<j<<std::endl;
 					if (CanMove(currentgame->GetPiece(i,j), row, col)==true){
 						return true;
 					}
@@ -481,6 +497,7 @@ bool Game::BoxCheck(color_piece color,int row, int col){
 
 bool Game::CheckChecks(color_piece color){
 	this->ResetChecks(color);
+
 
 	AbstractPiece* king=this->FindKing(color);
 
@@ -626,8 +643,9 @@ int* Game::LineAttack(AbstractPiece* King, AbstractPiece* Attackpiece, int* size
 bool Game::CheckMated(color_piece color){
 	if (CheckChecks(color)==false)
 		return false;
-
+	
 	//I check if king can move in the neighbors boxes
+
 	AbstractPiece* King=this->FindKing(color);
 	int row= King->GetRow();
 	int col= King->GetCol();
@@ -687,7 +705,57 @@ bool Game::CheckMated(color_piece color){
 	}
 
 }
+
 //----------------------------------------------------------------
 
+bool Game::Turn(color_piece color, int row_i, int col_i, int row_f, int col_f){
+
+	if (currentgame->GetPiece(row_i, col_i)==NULL){
+		std::cout<<"(line 704, my_chess.h) no piece here"<<std::endl;
+		return false;;
+	}
+	else{
+
+		if (this->ValidMove(currentgame->GetPiece(row_i, col_i), row_f, col_f)==false){
+			std::cout<<"(line 710, my_chess.h) move not valid"<<std::endl;
+			return false;
+		}
+		else{
+			currentgame->Move(currentgame->GetPiece(row_i, col_i), row_f, col_f);
+			return true;
+		}
+	}
+}
+
+void Game::Match(){
+	//Game--->Input (), in this case using terminal
+	int row_i, col_i, row_f, col_f;
+
+	while(true){
+		currentgame->Print();
+
+		if (this->CheckMated(currentgame->GetTurn())==true)
+			break;
+
+		if (whitechecked==true)
+			std::cout<<"White checked"<<std::endl;
+		if(blackchecked==true)
+			std::cout<<"Black checked"<<std::endl;
+
+		if (currentgame->GetTurn()==white)
+			std::cout<<"Play White:"<<std::endl;
+		else 
+			std::cout<<"Play Black:"<<std::endl;
+
+		std::cout<<"Play move (row_i, col_i, row_f, col_f)"<<std::endl;
+		std::cout<<"row_i "; std::cin >> row_i; std::cout<<std::endl;
+		std::cout<<"col_i "; std::cin >> col_i; std::cout<<std::endl;
+		std::cout<<"row_f "; std::cin >> row_f; std::cout<<std::endl;
+		std::cout<<"col_f "; std::cin >> col_f; std::cout<<std::endl;
+
+		if (this->Turn(currentgame->GetTurn(), row_i, col_i, row_f, col_f)==true)
+			currentgame->ChangeTurn();
+	}
+}
 
 #endif
