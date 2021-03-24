@@ -5,6 +5,7 @@
 using namespace std;
 
 int main(){
+	
 	Game* gioco= new (Game);
 
 	gioco->Match();
