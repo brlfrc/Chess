@@ -41,7 +41,6 @@ class AbstractPiece{
 		void SetMoved(bool a){moved = a;};
 
 		void ChangePos(int n_row, int n_col){row = n_row; col = n_col; this->SetMoved(true);};
-
 };
 
 class Rook : public AbstractPiece{

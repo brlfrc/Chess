@@ -287,9 +287,10 @@ void board::Move(AbstractPiece* piece, int row_f, int col_f){
 		if (thisboard[row_f][col_f]!=NULL)			
 			thisboard[row_f][col_f]->SetAlive(false);
 
+
 		thisboard[row_f][col_f] = this->GetPiece(row_i,col_i);
 		thisboard[row_f][col_f]->ChangePos(row_f,col_f);
-  		thisboard[row_i][col_i] = NULL;
+  		thisboard[row_i][col_i]=NULL;
 	}
 	else{
 		std::cout<<"(line 282, my_board.h) error moving piece"<<std::endl;
