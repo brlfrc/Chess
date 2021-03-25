@@ -21,6 +21,8 @@ class board{
 		~board();													
 
 		AbstractPiece * GetPiece(int row, int col){return thisboard[row][col];};
+		void SetPiece(AbstractPiece * piece, int row, int col){thisboard[row][col]=piece;};
+		
 		bool Occupied(int n_raw, int n_col){return (thisboard[n_raw][n_col] != NULL);};
 
 		void Print();												
@@ -293,7 +295,7 @@ void board::Move(AbstractPiece* piece, int row_f, int col_f){
   		thisboard[row_i][col_i]=NULL;
 	}
 	else{
-		std::cout<<"(line 282, my_board.h) error moving piece"<<std::endl;
+		std::cout<<"(line 298, my_board.h) error moving piece"<<std::endl;
 	}
 
 }
