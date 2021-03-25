@@ -17,6 +17,7 @@ class AbstractPiece{
 
 		bool alive;
 		bool moved;
+		bool Enpassant; //for pawn
 
 	public:
 		AbstractPiece(type_piece Type, color_piece Color, int Row, int Col){
@@ -41,6 +42,9 @@ class AbstractPiece{
 		void SetMoved(bool a){moved = a;};
 
 		void ChangePos(int n_row, int n_col){row = n_row; col = n_col; this->SetMoved(true);};
+
+		bool GetEnpassant(){return Enpassant;};
+		void SetEnpassant(bool newEn){Enpassant=newEn;};
 };
 
 class Rook : public AbstractPiece{
