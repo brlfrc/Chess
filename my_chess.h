@@ -27,7 +27,7 @@ class Game{
 		void Resetpossiblemoves(){for(int i =0; i<8;i++) {for(int j=0; j<8;j++) possiblemoves[i][j]=false;} };
 		bool CanMove(AbstractPiece* piece, int row, int col);   //make possiblemove and return it
 		bool ValidMove(AbstractPiece* piece, int row_f, int col_f);   //Considering checks a move is valid?
-
+		
 		//check
 		bool GetCheck(color_piece color){if (color==white) return whitechecked; else return blackchecked;}
 		void ResetChecks(color_piece color){if (color==white) whitechecked=false; else blackchecked=false;}
@@ -40,6 +40,15 @@ class Game{
 		void LineAttack(AbstractPiece* K, AbstractPiece* Attackpiece, int* size, int* line);  //give the line attack
 		bool CheckMated(color_piece color);        //missing
 
+		//Castling
+		bool Castling(color_piece color, int i); //castling move code 8 8 8 0 (short) 8 8 8 1 (long)
+		void CastlingMove(color_piece color, int i);
+
+		//Capture Enpassant
+		bool Enpassant(AbstractPiece* piece, int row_f, int col_f);
+		void EnpassantMove(AbstractPiece* piece, int row_f, int col_f);
+		void EnpassantReset(color_piece color);
+
 		//moving
 		bool Turn(color_piece color, int row_i, int col_i, int row_f, int col_f);
 		void Match();
@@ -51,7 +60,7 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 	this->Resetpossiblemoves();
 
 	if (piece== NULL){
-		std::cout<<"(line 54, my_chess.h) Error, there is no piece in this position"<<std::endl;
+		std::cout<<"(line 63, my_chess.h) Error, there is no piece in this position"<<std::endl;
 		return;
 	}
 
@@ -404,6 +413,7 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 							possiblemoves[row+1][col-1] = true;
 				}
 			}
+
 			if (color == black){
 				
 				if(currentgame->GetPiece(row,col)->GetMoved()==false){
@@ -454,11 +464,17 @@ bool Game::ValidMove(AbstractPiece* piece, int row_f, int col_f){
 
 		if (this->CheckChecks(piece->GetColor())==false){
 			currentgame->Restore();
-			return true;
+
+			if (piece->GetType()==king){
+				if (abs(this->FindKing(white)->GetRow()-this->FindKing(black)->GetRow())>1 && abs(this->FindKing(white)->GetCol()-this->FindKing(black)->GetCol()))
+					return true;
+			}
+			else
+				return true;
 		}
 		else{
 			if (piece->GetType()!=king)
-				std::cout<<"(line 455, my_chess.h) there is or open check"<<std::endl;
+				std::cout<<"(line 477, my_chess.h) there is or open check"<<std::endl;
 		}
 	}
 	currentgame->Restore();
@@ -709,24 +725,154 @@ bool Game::CheckMated(color_piece color){
 		}
 		return true;
 	}
+}
 
+//-------------  Castling  ---------------------------------
+
+bool Game::Castling(color_piece color, int i){	// i = 0 short castling i=1 long one
+	if (color==white){
+		if (i==0){
+			if(currentgame->GetPiece(0,5)==NULL && currentgame->GetPiece(0,6)==NULL){
+				if (CheckChecks(color)==false && this->BoxCheck(color,0,5)==false && this->BoxCheck(color,0,6)==false && currentgame->GetPiece(0,4)->GetMoved()==false && currentgame->GetPiece(0,7)->GetMoved()==false)
+					return true;
+			}
+			else
+				return false;
+		}
+		else{
+			if(currentgame->GetPiece(0,2)==NULL && currentgame->GetPiece(0,3)==NULL && currentgame->GetPiece(0,1)==NULL){
+				if (this->CheckChecks(color)==false && this->BoxCheck(color,0,2)==false && this->BoxCheck(color,0,3)==false && currentgame->GetPiece(0,4)->GetMoved()==false && currentgame->GetPiece(0,0)->GetMoved()==false)
+					return true;
+			}
+			else
+				return false;
+		}
+	}
+	else{
+		if (i==0){
+			if(currentgame->GetPiece(7,5)==NULL && currentgame->GetPiece(7,6)==NULL){
+				if (CheckChecks(color)==false && this->BoxCheck(color,7,5)==false && this->BoxCheck(color,7,6)==false && currentgame->GetPiece(7,4)->GetMoved()==false && currentgame->GetPiece(7,7)->GetMoved()==false)
+					return true;
+			}
+			else
+				return false;
+		}
+		else{
+			if(currentgame->GetPiece(7,2)==NULL && currentgame->GetPiece(7,3)==NULL && currentgame->GetPiece(7,1)==NULL){
+				if (CheckChecks(color)==false && this->BoxCheck(color,7,2)==false && this->BoxCheck(color,7,3)==false && currentgame->GetPiece(7,4)->GetMoved()==false && currentgame->GetPiece(7,0)->GetMoved()==false)
+					return true;
+			}
+			else
+				return false;
+		}
+	}
+}
+
+void Game::CastlingMove(color_piece color, int i){
+	if (color==white){
+		if (i==0){
+			currentgame->Move(currentgame->GetPiece(0,4), 0, 6);
+			currentgame->Move(currentgame->GetPiece(0,7), 0, 5);
+		}
+		else{
+			currentgame->Move(currentgame->GetPiece(0,4), 0, 2);
+			currentgame->Move(currentgame->GetPiece(0,0), 0, 3);
+		}
+	}
+	else{
+		if (i==0){
+			currentgame->Move(currentgame->GetPiece(7,4), 7, 6);
+			currentgame->Move(currentgame->GetPiece(7,7), 7, 5);
+		}
+		else{
+			currentgame->Move(currentgame->GetPiece(7,4), 7, 2);
+			currentgame->Move(currentgame->GetPiece(7,0), 7, 3);
+		}
+	}
+}
+
+//-------------  Enpassant  ---------------------------------
+
+bool Game::Enpassant(AbstractPiece* piece, int row_f, int col_f){
+	if (piece->GetType()==pawn){
+		if(piece->GetColor()==white){
+			if (currentgame->Occupied(row_f-1,col_f)==true){
+				if(currentgame->GetPiece(row_f-1,col_f)->GetType()==pawn && currentgame->GetPiece(row_f-1,col_f)->GetColor() != piece->GetColor()){
+					if(currentgame->GetPiece(row_f-1,col_f)->GetEnpassant()==true)
+						return true;
+				}
+			}
+		}
+		if(piece->GetColor()==black){
+			if (currentgame->Occupied(row_f+1,col_f)==true){
+				if(currentgame->GetPiece(row_f+1,col_f)->GetType()==pawn && currentgame->GetPiece(row_f+1,col_f)->GetColor() != piece->GetColor()){
+					if(currentgame->GetPiece(row_f+1,col_f)->GetEnpassant()==true)
+						return true;
+				}
+			}
+		}
+	}
+	return false;
+}
+
+void Game::EnpassantMove(AbstractPiece* piece, int row_f, int col_f){
+	if(piece->GetColor()==white){
+		currentgame->Move(piece, row_f, col_f);
+		currentgame->GetPiece(row_f-1,col_f)->SetAlive(false);
+		currentgame->SetPiece(NULL,row_f-1,col_f);
+	}
+	if(piece->GetColor()==black){
+		currentgame->Move(piece, row_f, col_f);
+		currentgame->GetPiece(row_f+1,col_f)->SetAlive(false);
+		currentgame->SetPiece(NULL,row_f+1,col_f);
+	}	
+}
+
+void Game::EnpassantReset(color_piece color){
+	for(int i = 0; i < 8; i++){
+		for(int j = 0; j < 8; j++){
+			if (currentgame->GetPiece(i,j)!=NULL){
+				if (currentgame->GetPiece(i,j)->GetColor()==color && currentgame->GetPiece(i,j)->GetType()==pawn)
+					currentgame->GetPiece(i,j)->SetEnpassant(false);
+			}
+		}
+	}
 }
 
 //----------------------------------------------------------------
 
-bool Game::Turn(color_piece color, int row_i, int col_i, int row_f, int col_f){
+bool Game::Turn(color_piece color, int row_i, int col_i, int row_f, int col_f){  //castling move code 8 8 8 0 (short) 8 8 8 1 (long)
+	//Castling
+	if (row_i==8 && col_i==8 && row_f==8){
+		if (col_f==0 && this->Castling(color, 0)){
+			this->CastlingMove(color, 0);
+			return true;
+		}
+		else if (col_f==1 && this->Castling(color, 1)){
+			this->CastlingMove(color, 1);
+			return true;
+		}
+		std::cout<<"(line 855, my_chess.h) Castling not possible"<<std::endl;
+		return false;
+	}
+
 
 	if (currentgame->GetPiece(row_i, col_i)==NULL){
-		std::cout<<"(line 704, my_chess.h) no piece here"<<std::endl;
+		std::cout<<"(line 861, my_chess.h) no piece here"<<std::endl;
 		return false;;
 	}
+	else if (this->Enpassant(currentgame->GetPiece(row_i, col_i), row_f, col_f) == true)
+				this->EnpassantMove(currentgame->GetPiece(row_i, col_i), row_f, col_f);
 	else{
 		if (this->ValidMove(currentgame->GetPiece(row_i, col_i), row_f, col_f)==false){
-			std::cout<<"(line 710, my_chess.h) move not valid"<<std::endl;
+			std::cout<<"(line 868, my_chess.h) move not valid"<<std::endl;
 			return false;
 		}
 		else{
 			currentgame->Move(currentgame->GetPiece(row_i, col_i), row_f, col_f);
+
+			if (currentgame->GetPiece(row_f, col_f)->GetType() ==pawn && abs(row_i-row_f)==2) currentgame->GetPiece(row_f, col_f)->SetEnpassant(true);
+			if (currentgame->GetPiece(row_f, col_f)->GetColor()==white)  this->EnpassantReset(black); else this->EnpassantReset(white);
 			return true;
 		}
 	}
@@ -735,11 +881,7 @@ bool Game::Turn(color_piece color, int row_i, int col_i, int row_f, int col_f){
 void Game::Match(){
 	//Game--->Input (), in this case using terminal
 	int row_i, col_i, row_f, col_f;
-	/*int row_i[]={1,6,0};
-	int col_i[]={4,5,3};
-	int row_f[]={2,5,4};
-	int col_f[]={4,5,7};*/
-
+	
 	while(true){
 
 		currentgame->Print();
