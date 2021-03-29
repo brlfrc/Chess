@@ -3,12 +3,35 @@
 
 #include "my_board.h"
 #include <cmath>
+#include <vector>
+#include <fstream>
+#include <ctime>
+#include "boost/filesystem.hpp"
 
-//----------------------------------------------------------------
-//Game Function. Obv not really of the library, but useful
-//----------------------------------------------------------------
+#define PRINT true
+
+//-------------Easy Class to record game-------------------------------------
+class Record{
+	protected:
+		int row_i, row_f, col_i, col_f;
+		AbstractPiece* PieceMoving;
+	public:
+		Record(int row, int col, AbstractPiece* Piece){row_i=Piece->GetRow();col_i=Piece->GetCol();PieceMoving=Piece;row_f=row; col_f=col;}
+		Record(int row, int col){row_f=row; col_f=col;}
+
+		int GetRow_i(){return row_i;};
+		void SetRow_i(int a){row_i=a;};
+		int GetRow_f(){return row_f;};
+		void SetRow_f(int a){row_f=a;};
+		int GetCol_i(){return col_i;};
+		void SetCol_i(int a){col_i=a;};
+		int GetCol_f(){return col_f;};
+		void SetCol_f(int a){col_f=a;};
+		AbstractPiece* GetPieceMoved(){return PieceMoving;};
+		void SetPieceMoved(AbstractPiece* a){PieceMoving=a;};
+};
+//-------------Class Game-----------------------
 class Game{
-
 	protected:
 		board * currentgame= new board();
 
@@ -17,6 +40,7 @@ class Game{
 
 		bool possiblemoves [8][8];
 
+		std::vector<Record> MatchRecord;
 	public:
 		Game(){};
 
@@ -38,7 +62,7 @@ class Game{
 		AbstractPiece* FindCheckPiece(color_piece color);
 		bool BoxAttack(color_piece color,int row, int col);   //There is a piece that can go in (row, col)
 		void LineAttack(AbstractPiece* K, AbstractPiece* Attackpiece, int* size, int* line);  //give the line attack
-		bool CheckMated(color_piece color);        //missing
+		bool CheckMated(color_piece color, bool* Draw);        //missing
 
 		//Castling
 		bool Castling(color_piece color, int i); //castling move code 8 8 8 0 (short) 8 8 8 1 (long)
@@ -48,6 +72,16 @@ class Game{
 		bool Enpassant(AbstractPiece* piece, int row_f, int col_f);
 		void EnpassantMove(AbstractPiece* piece, int row_f, int col_f);
 		void EnpassantReset(color_piece color);
+
+		//Draw Function
+		bool CheckDraw(color_piece color);
+
+		//Recording and Printing Function
+		void RecordMatch(AbstractPiece* piece, int row_f, int col_f){MatchRecord.push_back(Record(row_f, col_f, piece));};
+		void RecordMatch(int row_f, int col_f){MatchRecord.push_back(Record(row_f, col_f));};
+
+		char Translate(int col);   //fucntion to traslate int col in a char
+		void PrintMatch();
 
 		//moving
 		bool Turn(color_piece color, int row_i, int col_i, int row_f, int col_f);
@@ -60,7 +94,7 @@ void Game::Studypossiblemoves(AbstractPiece* piece){
 	this->Resetpossiblemoves();
 
 	if (piece== NULL){
-		std::cout<<"(line 63, my_chess.h) Error, there is no piece in this position"<<std::endl;
+		std::cout<<"(line 97, my_chess.h) Error, there is no piece in this position"<<std::endl;
 		return;
 	}
 
@@ -474,7 +508,7 @@ bool Game::ValidMove(AbstractPiece* piece, int row_f, int col_f){
 		}
 		else{
 			if (piece->GetType()!=king)
-				std::cout<<"(line 477, my_chess.h) there is or open check"<<std::endl;
+				std::cout<<"(line 511, my_chess.h) there is or open check"<<std::endl;
 		}
 	}
 	currentgame->Restore();
@@ -656,11 +690,17 @@ void Game::LineAttack(AbstractPiece* K, AbstractPiece* Attackpiece, int* size, i
 	}
 }
 
-bool Game::CheckMated(color_piece color){
+bool Game::CheckMated(color_piece color, bool* Draw){
 	this->ResetChecks(color);
 
-	if (CheckChecks(color)==false)
-		return false;
+	if (CheckChecks(color)==false){
+		if (this->CheckDraw(color)==false)
+			return false;
+		else{
+			Draw[0]=true;
+			return true;
+		} 
+	}
 
 	AbstractPiece* K=this->FindKing(color);
 
@@ -692,7 +732,8 @@ bool Game::CheckMated(color_piece color){
 		else return true;
 	}
 
-	//rook attack
+	//N.B. i don't define line as int* but in this way because i had some problem with memory
+	//rook attack                                   
 	if (Attackpiece->GetType()==rook){
 		int size[1];
 		int line[16];
@@ -839,36 +880,138 @@ void Game::EnpassantReset(color_piece color){
 	}
 }
 
-//----------------------------------------------------------------
+//-----------------  Draw   --------------------------------------
+//i checked before in checkmated that there is no check
+bool Game::CheckDraw(color_piece color){
+	//Draw for ripetition
+	int last=MatchRecord.size();
+	if (last>4){
+		if (MatchRecord[last-1].GetCol_i()==MatchRecord[last-3].GetCol_i() && MatchRecord[last-1].GetCol_f()==MatchRecord[last-3].GetCol_f() &&
+			MatchRecord[last-1].GetRow_i()==MatchRecord[last-3].GetRow_i() && MatchRecord[last-1].GetRow_f()==MatchRecord[last-3].GetRow_f() &&
+			MatchRecord[last-2].GetCol_i()==MatchRecord[last-4].GetCol_i() && MatchRecord[last-2].GetCol_f()==MatchRecord[last-4].GetCol_f() &&
+			MatchRecord[last-2].GetRow_i()==MatchRecord[last-4].GetRow_i() && MatchRecord[last-2].GetRow_f()==MatchRecord[last-4].GetRow_f())
+			return true;
+	}
+	//Draw for no possible moves
+	for(int i = 0; i < 8; i++){
+		for(int j = 0; j < 8; j++){
+			if (currentgame->GetPiece(i,j)!=NULL){
+				if (currentgame->GetPiece(i,j)->GetColor()==color){
+					this->Studypossiblemoves(currentgame->GetPiece(i,j));
+					for(int a = 0; a < 8; a++){
+						for(int b = 0; b < 8; b++){
+							if (this->Getpossiblemoves(a, b)==true){
+								if (this->ValidMove(currentgame->GetPiece(i,j),a,b)==true)
+									return false;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return true;
+}
+//------------------Print---------------------------------------
+char Game::Translate(int i){
+	switch(i){
+		case 0: return 'a';
+		case 1: return 'b';
+		case 2: return 'c';
+		case 3: return 'd';
+		case 4: return 'e';
+		case 5: return 'f';
+		case 6: return 'g';
+		case 7: return 'h';
+	}
+}
 
+void Game::PrintMatch(){
+	//Boost doesn't work i don't know why
+	/*boost::filesystem::path dir("Games");
+	 if(!(boost::filesystem::exists(dir))){
+        if (boost::filesystem::create_directory(dir))
+            std::cout << "Directory Games Successufully created" << std::endl;
+    }
+	*/
+
+	time_t now = time(0);
+   	std::string time= ctime(&now);
+
+   	//Change format file name
+   	time.erase(0,4);time.erase(3,1);time.erase(5,1);time.erase(7,1);time.erase(9,4);
+
+   	time.insert(3, "_");
+   	time.insert(6, "_");
+   	time.insert(9, "_");
+   	time.insert(12, "_");
+ 	time.insert(17, ".txt");
+ 	time.insert(0, "Games/");
+
+
+	std::fstream OutFile;
+
+ 	OutFile.open(time.c_str(),std::ios::out);
+
+ 	int a =1;
+
+ 	for (int i=0; i< MatchRecord.size(); i++){
+ 		if (i%2==0)
+ 			OutFile <<a<<":\t";
+
+ 		if (MatchRecord[i].GetRow_f()== 8){
+ 			if (MatchRecord[i].GetCol_f() ==0)
+ 				OutFile<<"0-0 \t";
+ 			else
+ 				OutFile<<"0-0-0 \t";
+ 		}	
+ 		else{
+ 		 OutFile <<MatchRecord[i].GetPieceMoved()->GetNamePiece()<<this->Translate(MatchRecord[i].GetCol_f())<<MatchRecord[i].GetRow_f()+1<<"\t\t";
+ 		}
+		if (i%2!=0){
+			a=a+1;
+ 			OutFile<<std::endl;
+		}
+ 	}
+
+
+ 	OutFile.close();
+} 	
+
+//--------------------------------------------------------------
 bool Game::Turn(color_piece color, int row_i, int col_i, int row_f, int col_f){  //castling move code 8 8 8 0 (short) 8 8 8 1 (long)
 	//Castling
 	if (row_i==8 && col_i==8 && row_f==8){
 		if (col_f==0 && this->Castling(color, 0)){
 			this->CastlingMove(color, 0);
+			this->RecordMatch(8, 0); 											// 8, 0 is code for  shortcastling in records
 			return true;
 		}
 		else if (col_f==1 && this->Castling(color, 1)){
 			this->CastlingMove(color, 1);
+			this->RecordMatch(8, 1);												// 8, 1 is code for  shortcastling in records
 			return true;
 		}
-		std::cout<<"(line 855, my_chess.h) Castling not possible"<<std::endl;
+		std::cout<<"(line 995, my_chess.h) Castling not possible"<<std::endl;
 		return false;
 	}
 
 
 	if (currentgame->GetPiece(row_i, col_i)==NULL){
-		std::cout<<"(line 861, my_chess.h) no piece here"<<std::endl;
+		std::cout<<"(line 1001, my_chess.h) no piece here"<<std::endl;
 		return false;;
 	}
-	else if (this->Enpassant(currentgame->GetPiece(row_i, col_i), row_f, col_f) == true)
+	else if (this->Enpassant(currentgame->GetPiece(row_i, col_i), row_f, col_f) == true){
+				this->RecordMatch(currentgame->GetPiece(row_i, col_i), row_f, col_f); 
 				this->EnpassantMove(currentgame->GetPiece(row_i, col_i), row_f, col_f);
+		}
 	else{
 		if (this->ValidMove(currentgame->GetPiece(row_i, col_i), row_f, col_f)==false){
-			std::cout<<"(line 868, my_chess.h) move not valid"<<std::endl;
+			std::cout<<"(line 1010, my_chess.h) move not valid"<<std::endl;
 			return false;
 		}
 		else{
+			this->RecordMatch(currentgame->GetPiece(row_i, col_i), row_f, col_f);
 			currentgame->Move(currentgame->GetPiece(row_i, col_i), row_f, col_f);
 
 			if (currentgame->GetPiece(row_f, col_f)->GetType() ==pawn && abs(row_i-row_f)==2) currentgame->GetPiece(row_f, col_f)->SetEnpassant(true);
@@ -881,12 +1024,14 @@ bool Game::Turn(color_piece color, int row_i, int col_i, int row_f, int col_f){ 
 void Game::Match(){
 	//Game--->Input (), in this case using terminal
 	int row_i, col_i, row_f, col_f;
+	bool* Draw;
+	Draw[0]=false;
 	
 	while(true){
 
 		currentgame->Print();
 
-		if (this->CheckMated(currentgame->GetTurn())==true)
+		if (this->CheckMated(currentgame->GetTurn(), Draw)==true)
 			break;
 
 		if (whitechecked==true)
@@ -906,9 +1051,22 @@ void Game::Match(){
 		std::cout<<"row_f "; std::cin >> row_f; std::cout<<std::endl;
 		std::cout<<"col_f "; std::cin >> col_f; std::cout<<std::endl;
 
+		if (row_i==8, col_i == 8, row_f==8, col_f==8)
+			break;
+
 		if (this->Turn(currentgame->GetTurn(), row_i, col_i, row_f, col_f)==true)
 			currentgame->ChangeTurn();
 	}
+
+	if (Draw[0] ==true)
+		std::cout<<"Draw"<<std::endl;
+	else{
+		if (currentgame->GetTurn()==white) std::cout<<"Black wins"<<std::endl;
+		else std::cout<<"White wins"<<std::endl;
+	}
+
+	if (PRINT==true)
+		this->PrintMatch();
 }
 
 #endif

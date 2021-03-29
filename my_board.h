@@ -297,7 +297,6 @@ void board::Move(AbstractPiece* piece, int row_f, int col_f){
 	else{
 		std::cout<<"(line 298, my_board.h) error moving piece"<<std::endl;
 	}
-
 }
 
 
